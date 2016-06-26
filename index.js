@@ -3,6 +3,10 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
+var gameModule = require('./public/js/game.js');
+var game = new gameModule.Game();
+game.start();
+
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/public/index.html');
 });
