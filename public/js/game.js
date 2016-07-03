@@ -175,16 +175,16 @@ Game.prototype.recalculateArrowsAndBallDirections = function(){
                 this.changeBallDirection(ball, arrow.direction);
             }
         } else {
-            this.changeArrowOwner(x, y, ball.owner);
+            this.changeArrowOwner(ball.x, ball.y, ball.owner);
             var newBallDirection;
             if(ball.direction === 'N' && ball.y === this.FIELD_SIZE-1){
                 newBallDirection = (ball.x === this.FIELD_SIZE-1)? 'W' : 'E' ;
             } else if(ball.direction === 'S' && ball.y === 0){
-                newBallDirection = (ball.x === this.FIELD_SIZE-1)? 'E`' : 'W' ;
+                newBallDirection = (ball.x === 0)? 'E`' : 'W' ;
             } else if(ball.direction === 'E' && ball.x === this.FIELD_SIZE-1){
                 newBallDirection = (ball.y === 0)? 'N' : 'S';
             } else if(ball.direction === 'W' && ball.x === 0){
-                newBallDirection = (ball.y === 0)? 'S' : 'N';
+                newBallDirection = (ball.y === this.FIELD_SIZE-1)? 'S' : 'N';
             }
             
             if (typeof newBallDirection !== 'undefined') {

@@ -3,6 +3,9 @@ $( document ).ready(function() {
     
     var game = new Game();
     game.start();
+    
+    var scene = new Scene();
+    scene.animate();
 
     socket.on('waiting', function(msg){
         setStatus('waiting');
