@@ -1,15 +1,38 @@
-var Scene = function() {
-    this.renderer = PIXI.autoDetectRenderer(800, 600, {backgroundColor : 0xffffff});
+var Scene = function(game) {
+    this.SCENE_SIZE_X = 800;
+    this.SCENE_SIZE_Y = 600;
+    this.FIELD_MARGIN_X = 80;
+    this.FIELD_MARGIN_Y = 60;
+    
+    var point_00 = {x:this.FIELD_MARGIN_X, y:this.SCENE_SIZE_Y/2};
+
+    var cellSizeX = (this.SCENE_SIZE_X - 2*this.FIELD_MARGIN_X)/(game.FIELD_SIZE*2 - 2);
+    var cellSizeY = (this.SCENE_SIZE_Y - 2*this.FIELD_MARGIN_Y)/(game.FIELD_SIZE*2 - 2);
+
+    this.arrowCoordinates = [];
+    for(var i=0; i<game.FIELD_SIZE; i++){
+        this.arrowCoordinates[i] = [];
+        var point_i0 = {x : point_00.x + cellSizeX*i, y: point_00.y + cellSizeY*i};
+        for(var j=0; j<game.FIELD_SIZE; j++){
+            this.arrowCoordinates[i][j] = {x : point_i0.x + cellSizeX*j, y: point_i0.y - cellSizeY*j};
+        }
+    }
+
+    this.renderer = PIXI.autoDetectRenderer(this.SCENE_SIZE_X, this.SCENE_SIZE_Y, {backgroundColor : 0xffffff});
     document.body.appendChild(this.renderer.view);
 
     var graphics = new PIXI.Graphics();
 
     graphics.lineStyle(4, 0xcccccc, 1);
-    graphics.moveTo(80,300);
-    graphics.lineTo(400, 60);
-    graphics.lineTo(720, 300);
-    graphics.lineTo(400, 540);
-    graphics.lineTo(80,300);
+
+    for(i=0; i<game.FIELD_SIZE; i++){
+        graphics.moveTo(this.arrowCoordinates[i][0].x, this.arrowCoordinates[i][0].y);
+        graphics.lineTo(this.arrowCoordinates[i][game.FIELD_SIZE-1].x, this.arrowCoordinates[i][game.FIELD_SIZE-1].y);
+    }
+    for(i=0; i<game.FIELD_SIZE; i++){
+        graphics.moveTo(this.arrowCoordinates[0][i].x, this.arrowCoordinates[0][i].y);
+        graphics.lineTo(this.arrowCoordinates[game.FIELD_SIZE-1][i].x, this.arrowCoordinates[game.FIELD_SIZE-1][i].y);
+    }
 
     // create the root of the scene graph
     this.stage = new PIXI.Container();
@@ -40,4 +63,4 @@ Scene.prototype.animate = function(){
 
     // render the container
     this.renderer.render(this.stage);
-}
+};

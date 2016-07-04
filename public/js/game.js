@@ -21,6 +21,7 @@ var Game = function() {
     this.balls = [];
     this.player1Strength = 1;
     this.player2Strength = 1;
+    this.nextBallId = 1;
 
     this.provinceOwners = [];
     for (i = 0; i < this.FIELD_SIZE-1; i++) {
@@ -70,8 +71,8 @@ Game.prototype.moveBalls = function(){
 };
 
 Game.prototype.spawnBalls = function(){
-    this.addBall({owner:1, strength:this.player1Strength, direction:this.arrows[0][0].direction, x:0, y:0});
-    this.addBall({owner:2, strength:this.player2Strength, direction:this.arrows[this.FIELD_SIZE-1][this.FIELD_SIZE-1].direction, x:this.FIELD_SIZE-1, y:this.FIELD_SIZE-1});
+    this.addBall({owner:1, strength:this.player1Strength, direction:this.arrows[0][0].direction, x:0, y:0, id:this.nextBallId++});
+    this.addBall({owner:2, strength:this.player2Strength, direction:this.arrows[this.FIELD_SIZE-1][this.FIELD_SIZE-1].direction, x:this.FIELD_SIZE-1, y:this.FIELD_SIZE-1, id:this.nextBallId++});
 };
 
 Game.prototype.addBall = function(obj){
@@ -110,7 +111,7 @@ Game.prototype.collideBalls = function(){
                 player2BallsStrength += ball.strength;
             }
         }
-        
+console.log("Collision ("+hypotheticCollisions[collisionCellNumber][0].x+", "+hypotheticCollisions[collisionCellNumber][0].y+")");
         if (player1BallsStrength == player2BallsStrength) {
             var x = hypotheticCollisions[collisionCellNumber][0].x;
             var y = hypotheticCollisions[collisionCellNumber][0].y;
@@ -123,8 +124,9 @@ Game.prototype.collideBalls = function(){
             }
         }
         
-        player1BallsStrength -= Math.min(player1BallsStrength, player2BallsStrength);
-        player2BallsStrength -= Math.min(player1BallsStrength, player2BallsStrength);
+        var strengthLostByBothPlayers = Math.min(player1BallsStrength, player2BallsStrength);
+        player1BallsStrength -= strengthLostByBothPlayers;
+        player2BallsStrength -= strengthLostByBothPlayers;
         
         for (j = 0; j < hypotheticCollisions[collisionCellNumber].length; j++) {
             ball = hypotheticCollisions[collisionCellNumber][j];
@@ -159,10 +161,11 @@ Game.prototype.changeArrowDirection = function(x, y, newDirection){
 }
 
 Game.prototype.setBallStrength = function(ball, newStrength){
-    ball.strength = player1BallsStrength;
+    ball.strength = newStrength;
 };
 
 Game.prototype.removeBallAtIndex = function(i){
+console.log("Ball destroyed: "+this.balls[i].id)
     this.balls.splice(i, 1);
 };
 
@@ -180,7 +183,7 @@ Game.prototype.recalculateArrowsAndBallDirections = function(){
             if(ball.direction === 'N' && ball.y === this.FIELD_SIZE-1){
                 newBallDirection = (ball.x === this.FIELD_SIZE-1)? 'W' : 'E' ;
             } else if(ball.direction === 'S' && ball.y === 0){
-                newBallDirection = (ball.x === 0)? 'E`' : 'W' ;
+                newBallDirection = (ball.x === 0)? 'E' : 'W' ;
             } else if(ball.direction === 'E' && ball.x === this.FIELD_SIZE-1){
                 newBallDirection = (ball.y === 0)? 'N' : 'S';
             } else if(ball.direction === 'W' && ball.x === 0){

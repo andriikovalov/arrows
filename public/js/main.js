@@ -4,7 +4,7 @@ $( document ).ready(function() {
     var game = new Game();
     game.start();
     
-    var scene = new Scene();
+    var scene = new Scene(game);
     scene.animate();
 
     socket.on('waiting', function(msg){
