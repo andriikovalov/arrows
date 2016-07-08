@@ -26,7 +26,12 @@ var Scene = function(game) {
 Scene.prototype.animate = function(){
     requestAnimationFrame(this.animate.bind(this));
 
-    // render the container
+    for(var i=0; i<this.balls.length; i++){
+        var ball = this.balls[i];
+        ball.position.x = this.arrowCoordinates[ball.gamePosition.x][ball.gamePosition.y].x;
+        ball.position.y = this.arrowCoordinates[ball.gamePosition.x][ball.gamePosition.y].y;
+    }
+
     this.renderer.render(this.stage);
 };
 
@@ -179,11 +184,21 @@ Scene.prototype.createBall = function(ball){
             
     ballSprite.position.x = this.arrowCoordinates[ball.x][ball.y].x;
     ballSprite.position.y = this.arrowCoordinates[ball.x][ball.y].y;
+    
+    ballSprite.gamePosition = {};
+    ballSprite.gamePosition.x = ball.x;
+    ballSprite.gamePosition.y = ball.y;
 
     this.balls.push(ballSprite);
     this.stage.addChild(ballSprite);
 };
 
+Scene.prototype.updateBallsCoordinates = function(balls){
+    for (var i = 0; i < balls.length; i++) {
+        this.balls[i].gamePosition.x = balls[i].x;
+        this.balls[i].gamePosition.y = balls[i].y;
+    }
+};
 
 Scene.prototype.addListenersToGame = function(game){
     var thisScene = this;
@@ -197,5 +212,17 @@ Scene.prototype.addListenersToGame = function(game){
     game.changeArrowDirection = function(x, y, newDirection){
         originalChangeArrowDirection.call(game, x, y, newDirection);
         thisScene.updateArrow.call(thisScene, x, y, newDirection);
+    };
+
+    var originalAddBall = game.addBall;
+    game.addBall = function(ball){
+        originalAddBall.call(game, ball);
+        thisScene.createBall.call(thisScene, ball);
+    };
+
+    var originalMoveBalls = game.moveBalls;
+    game.moveBalls = function(){
+        originalMoveBalls.call(game);
+        thisScene.updateBallsCoordinates.call(thisScene, game.balls);
     };
 };

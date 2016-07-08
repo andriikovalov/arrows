@@ -179,7 +179,7 @@ Game.prototype.recalculateArrowsAndBallDirections = function(){
             }
         } else {
             this.changeArrowOwner(ball.x, ball.y, ball.owner);
-            var newBallDirection;
+            var newBallDirection = '';
             if(ball.direction === 'N' && ball.y === this.FIELD_SIZE-1){
                 newBallDirection = (ball.x === this.FIELD_SIZE-1)? 'W' : 'E' ;
             } else if(ball.direction === 'S' && ball.y === 0){
@@ -190,7 +190,7 @@ Game.prototype.recalculateArrowsAndBallDirections = function(){
                 newBallDirection = (ball.y === this.FIELD_SIZE-1)? 'S' : 'N';
             }
             
-            if (typeof newBallDirection !== 'undefined') {
+            if (newBallDirection !== '') {
                 this.changeBallDirection(ball, newBallDirection);
             }
             
