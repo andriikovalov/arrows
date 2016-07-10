@@ -3,6 +3,7 @@ var Scene = function(game) {
     this.SCENE_SIZE_Y = 600;
     this.FIELD_MARGIN_X = 80;
     this.FIELD_MARGIN_Y = 60;
+    this.STEP_DURATION = game.STEP_DURATION;
 
     this.calculateArrowCoordinates(game.FIELD_SIZE);
 
@@ -28,8 +29,33 @@ Scene.prototype.animate = function(){
 
     for(var i=0; i<this.balls.length; i++){
         var ball = this.balls[i];
-        ball.position.x = this.arrowCoordinates[ball.gamePosition.x][ball.gamePosition.y].x;
-        ball.position.y = this.arrowCoordinates[ball.gamePosition.x][ball.gamePosition.y].y;
+        var fractionOfStepPassed = (Date.now() - this.LAST_STEP_TIME) / this.STEP_DURATION;
+        if (fractionOfStepPassed > 1) {
+            fractionOfStepPassed = 1;
+        }
+        
+        var nextBallGameX = ball.gamePosition.x;
+        var nextBallGameY = ball.gamePosition.y;
+        if(ball.gameDirection === 'N'){
+            nextBallGameY++;
+        }
+        if(ball.gameDirection === 'S'){
+            nextBallGameY--;
+        }
+        if(ball.gameDirection === 'E'){
+            nextBallGameX++;
+        }
+        if(ball.gameDirection === 'W'){
+            nextBallGameX--;
+        }
+
+        if((typeof this.arrowCoordinates[nextBallGameX] !== 'undefined') && (typeof this.arrowCoordinates[nextBallGameX][nextBallGameY] !== 'undefined')){
+            var deltaX = this.arrowCoordinates[nextBallGameX][nextBallGameY].x - this.arrowCoordinates[ball.gamePosition.x][ball.gamePosition.y].x;
+            var deltaY = this.arrowCoordinates[nextBallGameX][nextBallGameY].y - this.arrowCoordinates[ball.gamePosition.x][ball.gamePosition.y].y;
+
+            ball.position.x = this.arrowCoordinates[ball.gamePosition.x][ball.gamePosition.y].x + deltaX * fractionOfStepPassed;
+            ball.position.y = this.arrowCoordinates[ball.gamePosition.x][ball.gamePosition.y].y + deltaY * fractionOfStepPassed;
+        }
     }
 
     this.renderer.render(this.stage);
@@ -113,7 +139,7 @@ Scene.prototype.createFlagAt = function(x, y, game){
 
     this.flags[x][y] = flag;
     this.stage.addChild(flag);
-}
+};
 
 Scene.prototype.createArrowAt = function(x, y, game){
     var texture;
@@ -175,7 +201,7 @@ Scene.prototype.createBall = function(ball){
     var texture = (ball.owner == 1) ? this.textures.p1_ball : this.textures.p2_ball;
     var ballSprite = new PIXI.Sprite(texture);
     
-    ballSprite.ballDirection = ball.direction;
+    ballSprite.gameDirection = ball.direction;
 
     ballSprite.anchor.x = 0.5;
     ballSprite.anchor.y = 0.5;
@@ -198,6 +224,10 @@ Scene.prototype.updateBallsCoordinates = function(balls){
         this.balls[i].gamePosition.x = balls[i].x;
         this.balls[i].gamePosition.y = balls[i].y;
     }
+};
+
+Scene.prototype.changeBallDirection = function(ballNumber, newDirection){
+    this.balls[ballNumber].gameDirection = newDirection;
 };
 
 Scene.prototype.addListenersToGame = function(game){
@@ -224,5 +254,17 @@ Scene.prototype.addListenersToGame = function(game){
     game.moveBalls = function(){
         originalMoveBalls.call(game);
         thisScene.updateBallsCoordinates.call(thisScene, game.balls);
+    };
+    
+    var originalGameStep = game.step;
+    game.step = function(){
+        originalGameStep.call(game);
+        thisScene.LAST_STEP_TIME = Date.now();
+    };
+
+    var originalChangeBallDirection = game.changeBallDirection;
+    game.changeBallDirection = function(ballNumber, newDirection){
+        originalChangeBallDirection.call(game, ballNumber, newDirection);
+        thisScene.changeBallDirection.call(thisScene, ballNumber, newDirection);
     };
 };

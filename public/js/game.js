@@ -49,7 +49,7 @@ Game.prototype.step = function(){
     this.recalculateArrowsAndBallDirections();
     this.recalculateStrengths();
     
-    console.log(this);
+    console.log("Step ");
 };
 
 Game.prototype.moveBalls = function(){
@@ -111,7 +111,7 @@ Game.prototype.collideBalls = function(){
                 player2BallsStrength += ball.strength;
             }
         }
-console.log("Collision ("+hypotheticCollisions[collisionCellNumber][0].x+", "+hypotheticCollisions[collisionCellNumber][0].y+")");
+
         if (player1BallsStrength == player2BallsStrength) {
             var x = hypotheticCollisions[collisionCellNumber][0].x;
             var y = hypotheticCollisions[collisionCellNumber][0].y;
@@ -154,18 +154,17 @@ console.log("Collision ("+hypotheticCollisions[collisionCellNumber][0].x+", "+hy
 
 Game.prototype.changeArrowOwner = function(x, y, newOwner){
     this.arrows[x][y].owner = newOwner;
-}
+};
 
 Game.prototype.changeArrowDirection = function(x, y, newDirection){
     this.arrows[x][y].direction = newDirection;
-}
+};
 
 Game.prototype.setBallStrength = function(ball, newStrength){
     ball.strength = newStrength;
 };
 
 Game.prototype.removeBallAtIndex = function(i){
-console.log("Ball destroyed: "+this.balls[i].id)
     this.balls.splice(i, 1);
 };
 
@@ -175,7 +174,7 @@ Game.prototype.recalculateArrowsAndBallDirections = function(){
         var arrow = this.arrows[ball.x][ball.y];
         if(arrow.owner == ball.owner){
             if (ball.direction != arrow.direction){
-                this.changeBallDirection(ball, arrow.direction);
+                this.changeBallDirection(i, arrow.direction);
             }
         } else {
             this.changeArrowOwner(ball.x, ball.y, ball.owner);
@@ -191,7 +190,7 @@ Game.prototype.recalculateArrowsAndBallDirections = function(){
             }
             
             if (newBallDirection !== '') {
-                this.changeBallDirection(ball, newBallDirection);
+                this.changeBallDirection(i, newBallDirection);
             }
             
             if (arrow.direction != ball.direction) {
@@ -201,9 +200,9 @@ Game.prototype.recalculateArrowsAndBallDirections = function(){
     }
 };
 
-Game.prototype.changeBallDirection = function(ball, newDirection){
-    ball.direction = newDirection;
-}
+Game.prototype.changeBallDirection = function(ballNumber, newDirection){
+    this.balls[ballNumber].direction = newDirection;
+};
 
 Game.prototype.recalculateStrengths = function(){
     var player1Strength = 1;
@@ -237,12 +236,12 @@ Game.prototype.recalculateStrengths = function(){
 
 Game.prototype.changeProvinceOwner = function(x, y, newOwner){
     this.provinceOwners[x][y] = newOwner;
-}
+};
 
 Game.prototype.setArrow = function(player, x, y, dir){
     if((player == 1 || player == 2)
         &&(dir == 'N' && y<this.FIELD_SIZE-1 || dir == 'S' && y>0 || dir == 'E' && x<this.FIELD_SIZE-1 || dir == 'W' && x>0)
-        &&(typeof this.arrows[x][y] !== 'undefined')
+        &&(typeof this.arrows[x] !== 'undefined') && (typeof this.arrows[x][y] !== 'undefined')
         &&(this.arrows[x][y].owner == player)
         &&(this.arrows[x][y].direction != dir)){
             this.changeArrowDirection(x, y, dir);
