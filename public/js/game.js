@@ -81,7 +81,7 @@ Game.prototype.addBall = function(obj){
 
 Game.prototype.collideBalls = function(){
     var hypotheticCollisions = [];
-    var сollisions = [];
+    var collisions = [];
     var i;
     var ball;
     for (i = 0; i < this.balls.length; i++) {
@@ -93,13 +93,13 @@ Game.prototype.collideBalls = function(){
         } else {
             hypotheticCollisions[cellNumber].push(ball);
             if(hypotheticCollisions[cellNumber].length === 2){
-                сollisions.push(cellNumber);
+                collisions.push(cellNumber);
             }
         }
     }
     
-    for (i = 0; i < сollisions.length; i ++) {
-        var collisionCellNumber = сollisions[i];
+    for (i = 0; i < collisions.length; i ++) {
+        var collisionCellNumber = collisions[i];
         var player1BallsStrength = 0;
         var player2BallsStrength = 0;
         var j;
