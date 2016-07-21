@@ -230,6 +230,11 @@ Scene.prototype.changeBallDirection = function(ballNumber, newDirection){
     this.balls[ballNumber].gameDirection = newDirection;
 };
 
+Scene.prototype.removeBallAtIndex = function(index){
+    this.stage.removeChild(this.balls[i]);
+    this.balls.splice(i, 1);
+};
+
 Scene.prototype.addListenersToGame = function(game){
     var thisScene = this;
     var originalChangeArrowOwner = game.changeArrowOwner;
@@ -266,5 +271,11 @@ Scene.prototype.addListenersToGame = function(game){
     game.changeBallDirection = function(ballNumber, newDirection){
         originalChangeBallDirection.call(game, ballNumber, newDirection);
         thisScene.changeBallDirection.call(thisScene, ballNumber, newDirection);
+    };
+
+    var originalRemoveBallAtIndex = game.removeBallAtIndex;
+    game.removeBallAtIndex = function(index){
+        originalRemoveBallAtIndex.call(game, index);
+        thisScene.removeBallAtIndex.call(thisScene, index);
     };
 };

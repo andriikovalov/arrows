@@ -49,7 +49,7 @@ Game.prototype.step = function(){
     this.recalculateArrowsAndBallDirections();
     this.recalculateStrengths();
     
-    console.log("Step ");
+console.log("Step " + this.currentStep);
 };
 
 Game.prototype.moveBalls = function(){
@@ -77,6 +77,7 @@ Game.prototype.spawnBalls = function(){
 
 Game.prototype.addBall = function(obj){
     this.balls.push(obj);
+console.log("New ball " + obj.id);
 };
 
 Game.prototype.collideBalls = function(){
@@ -100,6 +101,7 @@ Game.prototype.collideBalls = function(){
     
     for (i = 0; i < collisions.length; i ++) {
         var collisionCellNumber = collisions[i];
+console.log("Collision (" + hypotheticCollisions[collisionCellNumber][0].x + ", " + hypotheticCollisions[collisionCellNumber][0].y + ")");
         var player1BallsStrength = 0;
         var player2BallsStrength = 0;
         var j;
@@ -166,6 +168,7 @@ Game.prototype.setBallStrength = function(ball, newStrength){
 
 Game.prototype.removeBallAtIndex = function(i){
     this.balls.splice(i, 1);
+console.log("Ball " + i + " destroyed");
 };
 
 Game.prototype.recalculateArrowsAndBallDirections = function(){
