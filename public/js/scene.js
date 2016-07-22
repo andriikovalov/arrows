@@ -82,7 +82,7 @@ Scene.prototype.drawGrid = function(fieldSize){
 
     graphics.lineStyle(4, 0xcccccc, 1);
 
-    for(i=0; i<fieldSize; i++){
+    for(var i=0; i<fieldSize; i++){
         graphics.moveTo(this.arrowCoordinates[i][0].x, this.arrowCoordinates[i][0].y);
         graphics.lineTo(this.arrowCoordinates[i][fieldSize-1].x, this.arrowCoordinates[i][fieldSize-1].y);
     }
