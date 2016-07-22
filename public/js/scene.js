@@ -231,8 +231,8 @@ Scene.prototype.changeBallDirection = function(ballNumber, newDirection){
 };
 
 Scene.prototype.removeBallAtIndex = function(index){
-    this.stage.removeChild(this.balls[i]);
-    this.balls.splice(i, 1);
+    this.stage.removeChild(this.balls[index]);
+    this.balls.splice(index, 1);
 };
 
 Scene.prototype.addListenersToGame = function(game){

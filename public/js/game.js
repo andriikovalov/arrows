@@ -48,8 +48,7 @@ Game.prototype.step = function(){
     this.collideBalls();
     this.recalculateArrowsAndBallDirections();
     this.recalculateStrengths();
-    
-console.log("Step " + this.currentStep);
+//this.logField();
 };
 
 Game.prototype.moveBalls = function(){
@@ -77,7 +76,6 @@ Game.prototype.spawnBalls = function(){
 
 Game.prototype.addBall = function(obj){
     this.balls.push(obj);
-console.log("New ball " + obj.id);
 };
 
 Game.prototype.collideBalls = function(){
@@ -101,7 +99,6 @@ Game.prototype.collideBalls = function(){
     
     for (i = 0; i < collisions.length; i ++) {
         var collisionCellNumber = collisions[i];
-console.log("Collision (" + hypotheticCollisions[collisionCellNumber][0].x + ", " + hypotheticCollisions[collisionCellNumber][0].y + ")");
         var player1BallsStrength = 0;
         var player2BallsStrength = 0;
         var j;
@@ -117,12 +114,14 @@ console.log("Collision (" + hypotheticCollisions[collisionCellNumber][0].x + ", 
         if (player1BallsStrength == player2BallsStrength) {
             var x = hypotheticCollisions[collisionCellNumber][0].x;
             var y = hypotheticCollisions[collisionCellNumber][0].y;
-            if (this.arrows[x][y].owner !== 0) {
-                this.changeArrowOwner(x, y, 0);
-            }
-            this.arrows[x][y].owner = 0;
-            if (this.arrows[x][y].direction != 'NONE') {
-                this.changeArrowDirection(x, y, 'NONE');
+            if(!((x === 0 && y === 0) || (x === this.FIELD_SIZE-1 && y === this.FIELD_SIZE-1))){
+                if (this.arrows[x][y].owner !== 0) {
+                    this.changeArrowOwner(x, y, 0);
+                }
+                this.arrows[x][y].owner = 0;
+                if (this.arrows[x][y].direction != 'NONE') {
+                    this.changeArrowDirection(x, y, 'NONE');
+                }
             }
         }
         
@@ -168,7 +167,6 @@ Game.prototype.setBallStrength = function(ball, newStrength){
 
 Game.prototype.removeBallAtIndex = function(i){
     this.balls.splice(i, 1);
-console.log("Ball " + i + " destroyed");
 };
 
 Game.prototype.recalculateArrowsAndBallDirections = function(){
@@ -253,6 +251,33 @@ Game.prototype.setArrow = function(player, x, y, dir){
 
     return false;
 };
+
+Game.prototype.logField = function(){
+    var field = [];
+    for(var i = 0; i < this.FIELD_SIZE; i++){
+        field[i] = [];
+        for(var j = 0; j < this.FIELD_SIZE; j++){
+            field[i][j] = ".";
+        }
+    }
+    
+    for(i=0; i<this.balls.length; i++){
+        var ball = this.balls[i];
+        if(ball.owner == 1){
+            field[this.FIELD_SIZE-1-ball.y][ball.x] = "1";
+        } else if(ball.owner == 2){
+            field[this.FIELD_SIZE-1-ball.y][ball.x] = "2";
+        } else {
+            field[this.FIELD_SIZE-1-ball.y][ball.x] = "?";
+        }
+    }
+    
+    console.log("Step " + this.currentStep);
+    for(i = 0; i < this.FIELD_SIZE; i++){
+        console.log(field[i].join(""));
+    }
+};
+
 
 if(typeof exports !== 'undefined'){
     exports.Game = Game;
