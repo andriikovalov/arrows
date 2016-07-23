@@ -163,8 +163,74 @@ Scene.prototype.createArrowAt = function(x, y, game){
     arrow.position.x = this.arrowCoordinates[x][y].x;
     arrow.position.y = this.arrowCoordinates[x][y].y;
 
+    arrow.gamePosition = {};
+    arrow.gamePosition.x = x;
+    arrow.gamePosition.y = y;
+    arrow.gameOwner = game.arrows[x][y].owner;
+
     this.arrows[x][y] = arrow;
     this.stage.addChild(arrow);
+
+    var onArrowDragStart = function (event) {
+        if(this.gameOwner === currentPlayer){
+            this.oldTexture = this.texture;
+            this.data = event.data;
+            this.alpha = 0.5;
+            this.dragging = true;
+        }
+    };
+
+    var textures = this.textures;
+    var onArrowDragMove = function () {
+        if (this.dragging)
+        {
+            var newPosition = this.data.getLocalPosition(this);
+            if(newPosition.x < 0 && newPosition.y < 0){
+                this.newGameDirection = 'W';
+                this.texture = textures.arrow_w;
+            }
+            if(newPosition.x < 0 && newPosition.y > 0){
+                this.newGameDirection = 'S';
+                this.texture = textures.arrow_s;
+            }
+            if(newPosition.x > 0 && newPosition.y < 0){
+                this.newGameDirection = 'N';
+                this.texture = textures.arrow_n;
+            }
+            if(newPosition.x > 0 && newPosition.y > 0){
+                this.newGameDirection = 'E';
+                this.texture = textures.arrow_e;
+            }
+        }
+    };
+
+    var onArrowDragEnd = function () {
+        if (this.dragging)
+        {
+            if(!game.setArrow(currentPlayer, this.gamePosition.x, this.gamePosition.y, this.newGameDirection)){
+                this.texture = this.oldTexture;
+            }
+            this.oldTexture = null;
+            this.newGameDirection = null;
+            this.alpha = 1;
+            this.dragging = false;
+            this.data = null;
+        }
+    };
+    
+    arrow.interactive = true;
+    arrow
+        // events for drag start
+        .on('mousedown', onArrowDragStart)
+        .on('touchstart', onArrowDragStart)
+        // events for drag end
+        .on('mouseup', onArrowDragEnd)
+        .on('mouseupoutside', onArrowDragEnd)
+        .on('touchend', onArrowDragEnd)
+        .on('touchendoutside', onArrowDragEnd)
+        // events for drag move
+        .on('mousemove', onArrowDragMove)
+        .on('touchmove', onArrowDragMove);
 };
 
 Scene.prototype.updateFlag = function(x, y, newOwner){
@@ -177,6 +243,7 @@ Scene.prototype.updateFlag = function(x, y, newOwner){
         newTexture = this.textures.none_flag;
     }
 
+    this.arrows[x][y].gameOwner = newOwner;
     this.flags[x][y].texture = newTexture;
 };
 
