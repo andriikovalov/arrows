@@ -18,6 +18,7 @@ var Scene = function(game) {
     this.loadTextures();
     
     this.createFlagsAndArrows(game);
+    this.createProvinces();
 
     this.addListenersToGame(game);
     
@@ -104,6 +105,8 @@ Scene.prototype.loadTextures = function(){
     this.textures.arrow_w = PIXI.Texture.fromImage('images/arrow_w.png');
     this.textures.p1_ball = PIXI.Texture.fromImage('images/ball_red.png');
     this.textures.p2_ball = PIXI.Texture.fromImage('images/ball_blue.png');
+    this.textures.p1_province = PIXI.Texture.fromImage('images/province_red.png');
+    this.textures.p2_province = PIXI.Texture.fromImage('images/province_blue.png');
 };
 
 Scene.prototype.createFlagsAndArrows = function(game){
@@ -233,6 +236,25 @@ Scene.prototype.createArrowAt = function(x, y, game){
         .on('touchmove', onArrowDragMove);
 };
 
+Scene.prototype.createProvinces = function(){
+
+    this.provinces = [];
+    for(var i = 0; i < this.arrowCoordinates.length-1; i++){
+        this.provinces[i] = [];
+        for(var j = 0; j < this.arrowCoordinates.length-1; j++){
+            this.provinces[i][j] = new PIXI.Sprite(PIXI.Texture.EMPTY);
+
+            this.provinces[i][j].anchor.x = 0.5;
+            this.provinces[i][j].anchor.y = 0.5;
+            
+            this.provinces[i][j].position.x = this.arrowCoordinates[i][j+1].x;
+            this.provinces[i][j].position.y = this.arrowCoordinates[i][j].y;
+
+            this.stage.addChild(this.provinces[i][j]);
+        }
+    }
+};
+
 Scene.prototype.updateFlag = function(x, y, newOwner){
     var newTexture;
     if(newOwner == 1){
@@ -282,6 +304,10 @@ Scene.prototype.createBall = function(ball){
     ballSprite.gamePosition.x = ball.x;
     ballSprite.gamePosition.y = ball.y;
 
+    var sizeMultiplier = Math.sqrt(ball.strength);
+    ballSprite.scale.x = sizeMultiplier;
+    ballSprite.scale.y = sizeMultiplier;
+
     this.balls.push(ballSprite);
     this.stage.addChild(ballSprite);
 };
@@ -300,6 +326,23 @@ Scene.prototype.changeBallDirection = function(ballNumber, newDirection){
 Scene.prototype.removeBallAtIndex = function(index){
     this.stage.removeChild(this.balls[index]);
     this.balls.splice(index, 1);
+};
+
+Scene.prototype.setBallStrength = function(ballIndex, newStrength){
+    var sizeMultiplier = Math.sqrt(newStrength);
+    this.balls[ballIndex].scale.x = sizeMultiplier;
+    this.balls[ballIndex].scale.y = sizeMultiplier;
+};
+
+Scene.prototype.changeProvinceOwner = function(x, y, newOwner){
+    var province = this.provinces[x][y];
+    if (newOwner === 1) {
+        province.texture = this.textures.p1_province;
+    } else if (newOwner === 2) {
+        province.texture = this.textures.p2_province;
+    } else {
+        province.texture = PIXI.Texture.EMPTY;
+    }
 };
 
 Scene.prototype.addListenersToGame = function(game){
@@ -345,4 +388,16 @@ Scene.prototype.addListenersToGame = function(game){
         originalRemoveBallAtIndex.call(game, index);
         thisScene.removeBallAtIndex.call(thisScene, index);
     };
+
+    var originalSetBallStrength = game.setBallStrength;
+    game.setBallStrength = function(ballIndex, newStrength){
+        originalSetBallStrength.call(game, ballIndex, newStrength);
+        thisScene.setBallStrength.call(thisScene, ballIndex, newStrength);
+    };
+    
+    var originalChangeProvinceOwner = game.changeProvinceOwner;
+    game.changeProvinceOwner = function(x, y, newOwner){
+        originalChangeProvinceOwner.call(game, x, y, newOwner);
+        thisScene.changeProvinceOwner.call(thisScene, x, y, newOwner);
+    }
 };

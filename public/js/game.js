@@ -131,14 +131,15 @@ Game.prototype.collideBalls = function(){
         
         for (j = 0; j < hypotheticCollisions[collisionCellNumber].length; j++) {
             ball = hypotheticCollisions[collisionCellNumber][j];
+            var ballIndex = this.balls.indexOf(ball);
             if (ball.owner === 1) {
                 if (ball.strength != player1BallsStrength){
-                    this.setBallStrength(ball, player1BallsStrength);
+                    this.setBallStrength(ballIndex, player1BallsStrength);
                 }
                 player1BallsStrength = 0;
             } else {
                 if (ball.strength != player2BallsStrength){
-                    this.setBallStrength(ball, player2BallsStrength);
+                    this.setBallStrength(ballIndex, player2BallsStrength);
                 }
                 player2BallsStrength = 0;
             }
@@ -161,8 +162,8 @@ Game.prototype.changeArrowDirection = function(x, y, newDirection){
     this.arrows[x][y].direction = newDirection;
 };
 
-Game.prototype.setBallStrength = function(ball, newStrength){
-    ball.strength = newStrength;
+Game.prototype.setBallStrength = function(ballIndex, newStrength){
+    this.balls[ballIndex].strength = newStrength;
 };
 
 Game.prototype.removeBallAtIndex = function(i){
