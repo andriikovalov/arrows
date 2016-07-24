@@ -131,6 +131,7 @@ Game.prototype.collideArrayOfBalls = function(collidingBalls){
     var collisionResult = {allCrashed:false, x:collidingBalls[0].x, y:collidingBalls[0].y};
     var player1BallsStrength = 0;
     var player2BallsStrength = 0;
+    var momentum = {N:0, S:0, E:0, W:0};
     for (var j = 0; j < collidingBalls.length; j++) {
         var ball = collidingBalls[j];
         if (ball.owner === 1) {
@@ -138,26 +139,62 @@ Game.prototype.collideArrayOfBalls = function(collidingBalls){
         } else {
             player2BallsStrength += ball.strength;
         }
+        momentum[ball.direction] += ball.strength;
+    }
+    
+    var momentumN = momentum.N - momentum.S;
+    var momentumE = momentum.E - momentum.W;
+    var finalMomentumDirection = 'NONE';
+    if (momentumN === 0 || momentumE === 0) {
+        if (momentumN > 0) {
+            finalMomentumDirection = 'N';
+        } else if (momentumN < 0) {
+            finalMomentumDirection = 'S';
+        } else if (momentumE > 0) {
+            finalMomentumDirection = 'E';
+        } else if (momentumE < 0) {
+            finalMomentumDirection = 'W';
+        }
+    } else if (momentumN !== 0 && momentumE !== 0) {
+        var directionSN = (momentumN > 0) ? 'N' : 'S';
+        var directionEW = (momentumE > 0) ? 'E' : 'W';
+        var hypotheticalBall = {x:collisionResult.x, y:collisionResult.y, direction:directionSN};
+        var canGoNS = this.positionInsideField(Game.ballNextPosition(hypotheticalBall));
+        hypotheticalBall.direction = directionEW;
+        var canGoEW = this.positionInsideField(Game.ballNextPosition(hypotheticalBall));
+        if(canGoNS && !canGoEW){
+            finalMomentumDirection = directionSN;
+        } else if(!canGoNS && canGoEW){
+            finalMomentumDirection = directionEW;
+        } else if(canGoNS && canGoEW){
+            finalMomentumDirection = (Math.abs(momentumN) < Math.abs(momentumE)) ? directionEW : directionNS;
+        }
     }
 
-    collisionResult.allCrashed = true;
-        
+    if (player1BallsStrength === player2BallsStrength) {
+        collisionResult.allCrashed = true;
+    }
+    
     var strengthLostByBothPlayers = Math.min(player1BallsStrength, player2BallsStrength);
     player1BallsStrength -= strengthLostByBothPlayers;
     player2BallsStrength -= strengthLostByBothPlayers;
         
     for (j = 0; j < collidingBalls.length; j++) {
         ball = collidingBalls[j];
+        var ballIndex = this.balls.indexOf(ball);
         if (ball.owner === 1) {
             if (ball.strength != player1BallsStrength){
-                this.setBallStrength(this.balls.indexOf(ball), player1BallsStrength);
+                this.setBallStrength(ballIndex, player1BallsStrength);
             }
             player1BallsStrength = 0;
         } else {
             if (ball.strength != player2BallsStrength){
-                this.setBallStrength(this.balls.indexOf(ball), player2BallsStrength);
+                this.setBallStrength(ballIndex, player2BallsStrength);
             }
             player2BallsStrength = 0;
+        }
+        if(finalMomentumDirection !== 'NONE' && ball.strength > 0){
+            this.changeBallDirection(ballIndex, finalMomentumDirection);
         }
     }
         
@@ -170,6 +207,10 @@ Game.prototype.collideArrayOfBalls = function(collidingBalls){
     }
     
     return collisionResult;
+};
+
+Game.prototype.positionInsideField = function(position){
+    return position.x >= 0 && position.x < this.FIELD_SIZE && position.y >= 0 && position.y < this.FIELD_SIZE;
 };
 
 Game.prototype.changeArrowOwner = function(x, y, newOwner){
