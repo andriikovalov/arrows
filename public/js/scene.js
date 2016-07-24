@@ -23,10 +23,18 @@ var Scene = function(game) {
     this.addListenersToGame(game);
     
     this.balls = [];
+    
+    this.gameStopped = false;
+};
+
+Scene.prototype.stop = function(){
+    this.gameStopped = true;
 };
 
 Scene.prototype.animate = function(){
-    requestAnimationFrame(this.animate.bind(this));
+    if(!this.gameStopped){
+        requestAnimationFrame(this.animate.bind(this));
+    }
 
     for(var i=0; i<this.balls.length; i++){
         var ball = this.balls[i];
@@ -399,5 +407,5 @@ Scene.prototype.addListenersToGame = function(game){
     game.changeProvinceOwner = function(x, y, newOwner){
         originalChangeProvinceOwner.call(game, x, y, newOwner);
         thisScene.changeProvinceOwner.call(thisScene, x, y, newOwner);
-    }
+    };
 };

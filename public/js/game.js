@@ -4,9 +4,10 @@ var Game = function() {
     this.FIELD_SIZE = 5;
 
     this.arrows = [];
-    for (var i = 0; i < this.FIELD_SIZE; i++) {
+    var i,j;
+    for (i = 0; i < this.FIELD_SIZE; i++) {
         this.arrows[i] = [];
-        for (var j = 0; j < this.FIELD_SIZE; j++) {
+        for (j = 0; j < this.FIELD_SIZE; j++) {
             this.arrows[i][j] = {owner:0, direction:'NONE'};
         }
     }
@@ -34,9 +35,13 @@ var Game = function() {
 
 Game.prototype.start = function(){
     var self = this;
-    setInterval(function() {
+    this.intervalHandle = setInterval(function() {
         self.step.call(self);
     }, this.STEP_DURATION);
+};
+
+Game.prototype.stop = function(){
+    clearInterval(this.intervalHandle);
 };
 
 Game.prototype.step = function(){
@@ -132,8 +137,9 @@ Game.prototype.collideArrayOfBalls = function(collidingBalls){
     var player1BallsStrength = 0;
     var player2BallsStrength = 0;
     var momentum = {N:0, S:0, E:0, W:0};
+    var ball;
     for (var j = 0; j < collidingBalls.length; j++) {
-        var ball = collidingBalls[j];
+        ball = collidingBalls[j];
         if (ball.owner === 1) {
             player1BallsStrength += ball.strength;
         } else {

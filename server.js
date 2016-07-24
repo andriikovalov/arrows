@@ -23,7 +23,7 @@ io.on('connection', function(socket){
   console.log('a user connected ' + socket.id);
   if(playersNum < 2){
     playersNum++;
-    socket.playerNum = playersNum
+    socket.playerNum = playersNum;
 
     if(playersNum < 2){
       socket.emit('waiting');
@@ -40,7 +40,7 @@ io.on('connection', function(socket){
     
     console.log('user disconnected ' + this.id);
     if(socket.playerNum == 1 || socket.playerNum == 2){
-      io.emit('user left')
+      io.emit('user left');
     }
   });
 });
