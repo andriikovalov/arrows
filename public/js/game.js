@@ -48,25 +48,34 @@ Game.prototype.step = function(){
     this.collideBalls();
     this.recalculateArrowsAndBallDirections();
     this.recalculateStrengths();
+    this.scheduleCollisionsInTheMiddle();
 //this.logField();
 };
 
 Game.prototype.moveBalls = function(){
     for (var i = 0; i < this.balls.length; i++) {
         var ball = this.balls[i];
-        if(ball.direction === 'N'){
-            ball.y++;
-        }
-        if(ball.direction === 'S'){
-            ball.y--;
-        }
-        if(ball.direction === 'E'){
-            ball.x++;
-        }
-        if(ball.direction === 'W'){
-            ball.x--;
-        }
+        var nextPosition = Game.ballNextPosition(ball);
+        ball.x = nextPosition.x;
+        ball.y = nextPosition.y;
     }
+};
+
+Game.ballNextPosition = function(ball){
+    var nextPosition = {x:ball.x, y:ball.y};
+    if(ball.direction === 'N'){
+        nextPosition.y++;
+    }
+    if(ball.direction === 'S'){
+        nextPosition.y--;
+    }
+    if(ball.direction === 'E'){
+        nextPosition.x++;
+    }
+    if(ball.direction === 'W'){
+        nextPosition.x--;
+    }
+    return nextPosition;
 };
 
 Game.prototype.spawnBalls = function(){
@@ -99,21 +108,12 @@ Game.prototype.collideBalls = function(){
     
     for (i = 0; i < collisions.length; i ++) {
         var collisionCellNumber = collisions[i];
-        var player1BallsStrength = 0;
-        var player2BallsStrength = 0;
-        var j;
-        for (j = 0; j < hypotheticCollisions[collisionCellNumber].length; j++) {
-            ball = hypotheticCollisions[collisionCellNumber][j];
-            if (ball.owner === 1) {
-                player1BallsStrength += ball.strength;
-            } else {
-                player2BallsStrength += ball.strength;
-            }
-        }
-
-        if (player1BallsStrength == player2BallsStrength) {
-            var x = hypotheticCollisions[collisionCellNumber][0].x;
-            var y = hypotheticCollisions[collisionCellNumber][0].y;
+        var collisionX = hypotheticCollisions[collisionCellNumber][0].x;
+        var collisionY = hypotheticCollisions[collisionCellNumber][0].x;
+        var collisionResult = this.collideArrayOfBalls(hypotheticCollisions[collisionCellNumber]);
+        if(collisionResult.allCrashed){
+            var x = collisionResult.x;
+            var y = collisionResult.y;
             if(!((x === 0 && y === 0) || (x === this.FIELD_SIZE-1 && y === this.FIELD_SIZE-1))){
                 if (this.arrows[x][y].owner !== 0) {
                     this.changeArrowOwner(x, y, 0);
@@ -124,34 +124,52 @@ Game.prototype.collideBalls = function(){
                 }
             }
         }
+    }
+};
+
+Game.prototype.collideArrayOfBalls = function(collidingBalls){
+    var collisionResult = {allCrashed:false, x:collidingBalls[0].x, y:collidingBalls[0].y};
+    var player1BallsStrength = 0;
+    var player2BallsStrength = 0;
+    for (var j = 0; j < collidingBalls.length; j++) {
+        var ball = collidingBalls[j];
+        if (ball.owner === 1) {
+            player1BallsStrength += ball.strength;
+        } else {
+            player2BallsStrength += ball.strength;
+        }
+    }
+
+    collisionResult.allCrashed = true;
         
-        var strengthLostByBothPlayers = Math.min(player1BallsStrength, player2BallsStrength);
-        player1BallsStrength -= strengthLostByBothPlayers;
-        player2BallsStrength -= strengthLostByBothPlayers;
+    var strengthLostByBothPlayers = Math.min(player1BallsStrength, player2BallsStrength);
+    player1BallsStrength -= strengthLostByBothPlayers;
+    player2BallsStrength -= strengthLostByBothPlayers;
         
-        for (j = 0; j < hypotheticCollisions[collisionCellNumber].length; j++) {
-            ball = hypotheticCollisions[collisionCellNumber][j];
-            var ballIndex = this.balls.indexOf(ball);
-            if (ball.owner === 1) {
-                if (ball.strength != player1BallsStrength){
-                    this.setBallStrength(ballIndex, player1BallsStrength);
-                }
-                player1BallsStrength = 0;
-            } else {
-                if (ball.strength != player2BallsStrength){
-                    this.setBallStrength(ballIndex, player2BallsStrength);
-                }
-                player2BallsStrength = 0;
+    for (j = 0; j < collidingBalls.length; j++) {
+        ball = collidingBalls[j];
+        if (ball.owner === 1) {
+            if (ball.strength != player1BallsStrength){
+                this.setBallStrength(this.balls.indexOf(ball), player1BallsStrength);
             }
+            player1BallsStrength = 0;
+        } else {
+            if (ball.strength != player2BallsStrength){
+                this.setBallStrength(this.balls.indexOf(ball), player2BallsStrength);
+            }
+            player2BallsStrength = 0;
+        }
+    }
+        
+    var i = collidingBalls.length;
+    while (i--) {
+        ball = collidingBalls[i];
+        if(ball.strength === 0){
+            this.removeBallAtIndex(this.balls.indexOf(ball));
         }
     }
     
-    i = this.balls.length;
-    while (i--) {
-        if(this.balls[i].strength === 0){
-            this.removeBallAtIndex(i);
-        }
-    }
+    return collisionResult;
 };
 
 Game.prototype.changeArrowOwner = function(x, y, newOwner){
@@ -234,6 +252,38 @@ Game.prototype.recalculateStrengths = function(){
     }
     this.player1Strength = player1Strength;
     this.player2Strength = player2Strength;
+};
+
+Game.prototype.scheduleCollisionsInTheMiddle = function(){
+    var collisions = [];
+    for (var i = 0; i < this.balls.length-1; i++) {
+        for (var j = i+1; j < this.balls.length; j++) {
+            var ball1 = this.balls[i];
+            var ball2 = this.balls[j];
+            if(ball1.owner !== ball2.owner){
+                var ball1NextPosition = Game.ballNextPosition(ball1);
+                if(ball1NextPosition.x === ball2.x && ball1NextPosition.y === ball2.y){
+                    var ball2NextPosition = Game.ballNextPosition(ball2);
+                    if(ball2NextPosition.x === ball1.x && ball2NextPosition.y === ball1.y){
+                        collisions.push([ball1,ball2]);
+                    }
+                }
+            }
+        }
+    }
+    
+    if(collisions.length > 0){
+        var self = this;
+        setTimeout(function() {
+            self.collideInTheMiddle.call(self, collisions);
+        }, this.STEP_DURATION/2);
+    }
+};
+
+Game.prototype.collideInTheMiddle = function(collisions){
+    for (var i = 0; i < collisions.length; i++) {
+        this.collideArrayOfBalls(collisions[i]);
+    }
 };
 
 Game.prototype.changeProvinceOwner = function(x, y, newOwner){
