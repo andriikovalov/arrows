@@ -1,9 +1,11 @@
-var Scene = function(game) {
+var Scene = function(game, arrowChangedNotificationFunction) {
     this.SCENE_SIZE_X = 800;
     this.SCENE_SIZE_Y = 600;
     this.FIELD_MARGIN_X = 80;
     this.FIELD_MARGIN_Y = 60;
     this.STEP_DURATION = game.STEP_DURATION;
+    
+    Scene.notifyArrowChanged = arrowChangedNotificationFunction;
 
     this.calculateArrowCoordinates(game.FIELD_SIZE);
 
@@ -221,6 +223,7 @@ Scene.prototype.createArrowAt = function(x, y, game){
             if(!game.setArrow(currentPlayer, this.gamePosition.x, this.gamePosition.y, this.newGameDirection)){
                 this.texture = this.oldTexture;
             }
+            Scene.notifyArrowChanged(this.gamePosition.x, this.gamePosition.y, this.newGameDirection);
             this.oldTexture = null;
             this.newGameDirection = null;
             this.alpha = 1;

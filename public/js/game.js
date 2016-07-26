@@ -162,14 +162,14 @@ Game.prototype.collideArrayOfBalls = function(collidingBalls){
             finalMomentumDirection = 'W';
         }
     } else if (momentumN !== 0 && momentumE !== 0) {
-        var directionSN = (momentumN > 0) ? 'N' : 'S';
+        var directionNS = (momentumN > 0) ? 'N' : 'S';
         var directionEW = (momentumE > 0) ? 'E' : 'W';
-        var hypotheticalBall = {x:collisionResult.x, y:collisionResult.y, direction:directionSN};
+        var hypotheticalBall = {x:collisionResult.x, y:collisionResult.y, direction:directionNS};
         var canGoNS = this.positionInsideField(Game.ballNextPosition(hypotheticalBall));
         hypotheticalBall.direction = directionEW;
         var canGoEW = this.positionInsideField(Game.ballNextPosition(hypotheticalBall));
         if(canGoNS && !canGoEW){
-            finalMomentumDirection = directionSN;
+            finalMomentumDirection = directionNS;
         } else if(!canGoNS && canGoEW){
             finalMomentumDirection = directionEW;
         } else if(canGoNS && canGoEW){
