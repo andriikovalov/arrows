@@ -5,7 +5,6 @@ var io = require('socket.io')(http);
 
 var gameModule = require('./public/js/game.js');
 var game = new gameModule.Game();
-game.start();
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/public/index.html');
@@ -37,27 +36,38 @@ io.on('connection', function(socket){
       players2Socket.emit('start', 2);
       gameStarted = true;
       game.start();
+      console.log('Game Start!');
   }
 
   socket.on('disconnect', function(){
-    if(gameStarted === false){
-        if(playersNum > 0){
-            playersNum--;
-        }
-    }
-    
     console.log('user disconnected ' + this.id);
-    if(socket.playerNum == 1 || socket.playerNum == 2){
-      io.emit('user left');
-      gameStarted = false;
-      playersNum = 0;
+
+    if(socket.playerNum === 1 || socket.playerNum === 2){
+        if(gameStarted === false){
+            playersNum--;
+            if(socket.playerNum === 1){
+                players2Socket.playerNum = 1;
+                players1Socket = players2Socket;
+            }
+        }
+        else {
+            io.emit('user left');
+            gameStarted = false;
+            playersNum = 0;
+            players1Socket.playerNum = 0;
+            players2Socket.playerNum = 0;
+            game.stop();
+            game = new gameModule.Game();
+        }
     }
   });
 
     socket.on('arrow', function(x, y, direction){
-        console.log('arrow ' + socket.playerNum + ' ' + x + ' ' + y + ' ' + direction);
+        console.log('arrow ' + socket.playerNum + ' ' + x + ' ' + y + ' ' + direction + ' at ' + game.getGameTime());
         if (game.setArrow(socket.playerNum, x, y, direction)) {
             io.emit('arrow', x, y, direction);
+        } else {
+            console.log("FAIL");
         }
     });
 

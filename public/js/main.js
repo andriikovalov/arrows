@@ -5,7 +5,7 @@ $( document ).ready(function() {
     currentPlayer = 0;
     
     var scene = new Scene(game, function(x, y, direction){
-        console.log('send arrow ' + x + ' ' + y + ' ' + direction);
+        console.log('send arrow ' + x + ' ' + y + ' ' + direction + ' at ' + game.getGameTime());
         socket.emit('arrow', x, y, direction);
     });
     scene.animate();
@@ -25,7 +25,7 @@ $( document ).ready(function() {
     });
 
     socket.on('arrow', function(x, y, direction){
-        console.log('receive arrow ' + x + ' ' + y + ' ' + direction);
+        console.log('receive arrow ' + x + ' ' + y + ' ' + direction + ' at ' + game.getGameTime());
         if (game.arrows[x][y].direction !== direction) {
             game.changeArrowDirection(x, y, direction);
         }

@@ -31,9 +31,13 @@ var Game = function() {
             this.provinceOwners[i][j] = 0;
         }
     }
+    
+    this.winner = 0;
+    this.draw = false;
 };
 
 Game.prototype.start = function(){
+    this.LAST_STEP = Date.now();
     var self = this;
     this.intervalHandle = setInterval(function() {
         self.step.call(self);
@@ -46,6 +50,7 @@ Game.prototype.stop = function(){
 
 Game.prototype.step = function(){
     this.currentStep++;
+    this.LAST_STEP = Date.now();
     this.moveBalls();
     if(this.currentStep % this.STEPS_TO_CREATE_BALL === 0){
         this.spawnBalls();
@@ -54,7 +59,14 @@ Game.prototype.step = function(){
     this.recalculateArrowsAndBallDirections();
     this.recalculateStrengths();
     this.scheduleCollisionsInTheMiddle();
+    if(this.winner !== 0){
+        this.endGame();
+    }
 //this.logField();
+};
+
+Game.prototype.getGameTime = function(){
+    return this.currentStep + (Date.now() - this.LAST_STEP)/this.STEP_DURATION;
 };
 
 Game.prototype.moveBalls = function(){
@@ -221,6 +233,15 @@ Game.prototype.positionInsideField = function(position){
 
 Game.prototype.changeArrowOwner = function(x, y, newOwner){
     this.arrows[x][y].owner = newOwner;
+    
+    if((x === 0 && y === 0 && newOwner === 2) || (x === this.FIELD_SIZE-1 && y === this.FIELD_SIZE-1 && newOwner === 1)){
+        if(this.winner !== 0 && this.winner !== newOwner){
+            this.winner = 3;
+            this.draw = true;
+        } else {
+            this.winner = newOwner;
+        }
+    }
 };
 
 Game.prototype.changeArrowDirection = function(x, y, newDirection){
@@ -348,6 +369,15 @@ Game.prototype.setArrow = function(player, x, y, dir){
         }
 
     return false;
+};
+
+Game.prototype.endGame = function(){
+    this.stop();
+    if(this.draw){
+        return 0;
+    } else {
+        return this.winner;
+    }
 };
 
 Game.prototype.logField = function(){

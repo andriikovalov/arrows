@@ -1,8 +1,8 @@
 var Scene = function(game, arrowChangedNotificationFunction) {
     this.SCENE_SIZE_X = 800;
-    this.SCENE_SIZE_Y = 600;
-    this.FIELD_MARGIN_X = 80;
-    this.FIELD_MARGIN_Y = 60;
+    this.SCENE_SIZE_Y = 400;
+    this.FIELD_MARGIN_X = 20;
+    this.FIELD_MARGIN_Y = 10;
     this.STEP_DURATION = game.STEP_DURATION;
     
     Scene.notifyArrowChanged = arrowChangedNotificationFunction;
@@ -197,32 +197,33 @@ Scene.prototype.createArrowAt = function(x, y, game){
     var onArrowDragMove = function () {
         if (this.dragging)
         {
+            this.newGameDirection = 'NONE';
             var newPosition = this.data.getLocalPosition(this);
             if(newPosition.x < 0 && newPosition.y < 0){
                 this.newGameDirection = 'W';
-                this.texture = textures.arrow_w;
+                //this.texture = textures.arrow_w;
             }
             if(newPosition.x < 0 && newPosition.y > 0){
                 this.newGameDirection = 'S';
-                this.texture = textures.arrow_s;
+                //this.texture = textures.arrow_s;
             }
             if(newPosition.x > 0 && newPosition.y < 0){
                 this.newGameDirection = 'N';
-                this.texture = textures.arrow_n;
+                //this.texture = textures.arrow_n;
             }
             if(newPosition.x > 0 && newPosition.y > 0){
                 this.newGameDirection = 'E';
-                this.texture = textures.arrow_e;
+                //this.texture = textures.arrow_e;
             }
         }
     };
 
     var onArrowDragEnd = function () {
-        if (this.dragging)
+        if (this.dragging && this.newGameDirection !== 'NONE')
         {
-            if(!game.setArrow(currentPlayer, this.gamePosition.x, this.gamePosition.y, this.newGameDirection)){
-                this.texture = this.oldTexture;
-            }
+            //if(!game.setArrow(currentPlayer, this.gamePosition.x, this.gamePosition.y, this.newGameDirection)){
+                //this.texture = this.oldTexture;
+            //}
             Scene.notifyArrowChanged(this.gamePosition.x, this.gamePosition.y, this.newGameDirection);
             this.oldTexture = null;
             this.newGameDirection = null;
@@ -356,6 +357,21 @@ Scene.prototype.changeProvinceOwner = function(x, y, newOwner){
     }
 };
 
+Scene.prototype.endGame = function(winner){
+    var text;
+    if(winner === 0){
+        text = "Draw";
+    } else if(winner === 1) {
+        text = "Red wins";
+    } else if(winner === 2) {
+        text = "Blue wins";
+    }
+    
+    var textSprite = new PIXI.Text(text);
+    this.stage.addChild(textSprite);
+    this.stop();
+};
+
 Scene.prototype.addListenersToGame = function(game){
     var thisScene = this;
     var originalChangeArrowOwner = game.changeArrowOwner;
@@ -410,5 +426,11 @@ Scene.prototype.addListenersToGame = function(game){
     game.changeProvinceOwner = function(x, y, newOwner){
         originalChangeProvinceOwner.call(game, x, y, newOwner);
         thisScene.changeProvinceOwner.call(thisScene, x, y, newOwner);
+    };
+
+    var originalEndGame = game.endGame;
+    game.endGame = function(){
+        var winner = originalEndGame.call(game);
+        thisScene.endGame.call(thisScene, winner);
     };
 };
