@@ -1,12 +1,10 @@
-var Scene = function(game, arrowChangedNotificationFunction) {
-    this.SCENE_SIZE_X = 800;
-    this.SCENE_SIZE_Y = 400;
-    this.FIELD_MARGIN_X = 20;
+var Scene = function(game) {
+    this.SCENE_SIZE_X = 900;
+    this.SCENE_SIZE_Y = 600;
+    this.FIELD_MARGIN_X = 50;
     this.FIELD_MARGIN_Y = 10;
     this.STEP_DURATION = game.STEP_DURATION;
     
-    Scene.notifyArrowChanged = arrowChangedNotificationFunction;
-
     this.calculateArrowCoordinates(game.FIELD_SIZE);
 
     this.renderer = PIXI.autoDetectRenderer(this.SCENE_SIZE_X, this.SCENE_SIZE_Y, {backgroundColor : 0xffffff});
@@ -27,6 +25,25 @@ var Scene = function(game, arrowChangedNotificationFunction) {
     this.balls = [];
     
     this.gameStopped = false;
+    
+    var baseStrengthTextOffset = 30;
+    
+    var player1BaseStrengthText = new PIXI.Text(game.player1BaseHealth);
+    player1BaseStrengthText = new PIXI.Text(game.player1BaseHealth);
+    player1BaseStrengthText.position.x = this.FIELD_MARGIN_X - baseStrengthTextOffset;
+    player1BaseStrengthText.position.y = this.SCENE_SIZE_Y/2;
+    player1BaseStrengthText.anchor.x = 0.5;
+    player1BaseStrengthText.anchor.y = 0.5;
+    this.stage.addChild(player1BaseStrengthText);
+
+    var player2BaseStrengthText = new PIXI.Text(game.player2BaseHealth);
+    player2BaseStrengthText.position.x = this.SCENE_SIZE_X - this.FIELD_MARGIN_X + baseStrengthTextOffset;
+    player2BaseStrengthText.position.y = this.SCENE_SIZE_Y/2;
+    player2BaseStrengthText.anchor.x = 0.5;
+    player2BaseStrengthText.anchor.y = 0.5;
+    this.stage.addChild(player2BaseStrengthText);
+    
+    this.playerBaseStrengthTexts = [null, player1BaseStrengthText, player2BaseStrengthText];
 };
 
 Scene.prototype.stop = function(){
@@ -221,9 +238,6 @@ Scene.prototype.createArrowAt = function(x, y, game){
     var onArrowDragEnd = function () {
         if (this.dragging && this.newGameDirection !== 'NONE')
         {
-            //if(!game.setArrow(currentPlayer, this.gamePosition.x, this.gamePosition.y, this.newGameDirection)){
-                //this.texture = this.oldTexture;
-            //}
             Scene.notifyArrowChanged(this.gamePosition.x, this.gamePosition.y, this.newGameDirection);
             this.oldTexture = null;
             this.newGameDirection = null;
@@ -248,8 +262,12 @@ Scene.prototype.createArrowAt = function(x, y, game){
         .on('touchmove', onArrowDragMove);
 };
 
-Scene.prototype.createProvinces = function(){
+Scene.notifyArrowChanged = function(){
+    console.warn('Scene.notifyArrowChanged function is supposed to be redefined');
+};
 
+
+Scene.prototype.createProvinces = function(){
     this.provinces = [];
     for(var i = 0; i < this.arrowCoordinates.length-1; i++){
         this.provinces[i] = [];
@@ -372,6 +390,10 @@ Scene.prototype.endGame = function(winner){
     this.stop();
 };
 
+Scene.prototype.setBaseStrength = function(playerNum, newStrength){
+    this.playerBaseStrengthTexts[playerNum].text = newStrength;
+};
+
 Scene.prototype.addListenersToGame = function(game){
     var thisScene = this;
     var originalChangeArrowOwner = game.changeArrowOwner;
@@ -432,5 +454,11 @@ Scene.prototype.addListenersToGame = function(game){
     game.endGame = function(){
         var winner = originalEndGame.call(game);
         thisScene.endGame.call(thisScene, winner);
+    };
+    
+    var originalSetBaseStrength = game.setBaseStrength;
+    game.setBaseStrength = function(playerNum, newStrength){
+        originalSetBaseStrength.call(game, playerNum, newStrength);
+        thisScene.setBaseStrength.call(thisScene, playerNum, newStrength);
     };
 };

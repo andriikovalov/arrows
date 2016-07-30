@@ -2,6 +2,7 @@ var Game = function() {
     this.STEP_DURATION = 2000;
     this.STEPS_TO_CREATE_BALL = 3;
     this.FIELD_SIZE = 5;
+    this.BASE_HEALTH = 10;
 
     this.arrows = [];
     var i,j;
@@ -22,6 +23,8 @@ var Game = function() {
     this.balls = [];
     this.player1Strength = 1;
     this.player2Strength = 1;
+    this.player1BaseHealth = this.BASE_HEALTH;
+    this.player2BaseHealth = this.BASE_HEALTH;
     this.nextBallId = 1;
 
     this.provinceOwners = [];
@@ -34,6 +37,8 @@ var Game = function() {
     
     this.winner = 0;
     this.draw = false;
+    
+    this.arrowChangesNextTurnQueue = [];
 };
 
 Game.prototype.start = function(){
@@ -56,17 +61,20 @@ Game.prototype.step = function(){
         this.spawnBalls();
     }
     this.collideBalls();
+    this.collideBases();
     this.recalculateArrowsAndBallDirections();
     this.recalculateStrengths();
     this.scheduleCollisionsInTheMiddle();
-    if(this.winner !== 0){
-        this.endGame();
-    }
-//this.logField();
+    this.checkIfSomebodyWon();
+    this.applyArrowChangesFromQueue();
 };
 
 Game.prototype.getGameTime = function(){
-    return this.currentStep + (Date.now() - this.LAST_STEP)/this.STEP_DURATION;
+    return this.currentStep + this.getStepTime();
+};
+
+Game.prototype.getStepTime = function(){
+    return (Date.now() - this.LAST_STEP)/this.STEP_DURATION;
 };
 
 Game.prototype.moveBalls = function(){
@@ -134,10 +142,6 @@ Game.prototype.collideBalls = function(){
             if(!((x === 0 && y === 0) || (x === this.FIELD_SIZE-1 && y === this.FIELD_SIZE-1))){
                 if (this.arrows[x][y].owner !== 0) {
                     this.changeArrowOwner(x, y, 0);
-                }
-                this.arrows[x][y].owner = 0;
-                if (this.arrows[x][y].direction != 'NONE') {
-                    this.changeArrowDirection(x, y, 'NONE');
                 }
             }
         }
@@ -227,21 +231,43 @@ Game.prototype.collideArrayOfBalls = function(collidingBalls){
     return collisionResult;
 };
 
+Game.prototype.collideBases = function(){
+    for (var i = this.balls.length - 1; i >= 0 ; i--) {
+        var ball = this.balls[i];
+        if(ball.x === 0 && ball.y === 0 && ball.owner === 2){
+            if(this.player1BaseHealth >= ball.strength){
+                this.setBaseStrength(1, this.player1BaseHealth - ball.strength);
+                this.removeBallAtIndex(i);
+            } else {
+                this.setBallStrength(i, ball.strength - this.player1BaseHealth);
+                this.setBaseStrength(1, 0);
+            }
+        } else if(ball.x === this.FIELD_SIZE - 1 && ball.y === this.FIELD_SIZE - 1 && ball.owner === 1){
+            if(this.player2BaseHealth >= ball.strength){
+                this.setBaseStrength(2, this.player2BaseHealth - ball.strength);
+                this.removeBallAtIndex(i);
+            } else {
+                this.setBallStrength(i, ball.strength - this.player2BaseHealth);
+                this.setBaseStrength(2, 0);
+            }
+        }
+    }
+};
+
+Game.prototype.setBaseStrength = function(playerNum, newStrength){
+    if(playerNum === 1){
+        this.player1BaseHealth = newStrength;
+    } else if(playerNum === 2){
+        this.player2BaseHealth = newStrength;
+    }
+};
+
 Game.prototype.positionInsideField = function(position){
     return position.x >= 0 && position.x < this.FIELD_SIZE && position.y >= 0 && position.y < this.FIELD_SIZE;
 };
 
 Game.prototype.changeArrowOwner = function(x, y, newOwner){
     this.arrows[x][y].owner = newOwner;
-    
-    if((x === 0 && y === 0 && newOwner === 2) || (x === this.FIELD_SIZE-1 && y === this.FIELD_SIZE-1 && newOwner === 1)){
-        if(this.winner !== 0 && this.winner !== newOwner){
-            this.winner = 3;
-            this.draw = true;
-        } else {
-            this.winner = newOwner;
-        }
-    }
 };
 
 Game.prototype.changeArrowDirection = function(x, y, newDirection){
@@ -260,12 +286,14 @@ Game.prototype.recalculateArrowsAndBallDirections = function(){
     for (var i = 0; i < this.balls.length; i++) {
         var ball = this.balls[i];
         var arrow = this.arrows[ball.x][ball.y];
-        if(arrow.owner == ball.owner){
+        if(arrow.owner !== ball.owner){
+            this.changeArrowOwner(ball.x, ball.y, ball.owner);
+        }
+        if(arrow.direction !== 'NONE'){
             if (ball.direction != arrow.direction){
                 this.changeBallDirection(i, arrow.direction);
             }
         } else {
-            this.changeArrowOwner(ball.x, ball.y, ball.owner);
             var newBallDirection = '';
             if(ball.direction === 'N' && ball.y === this.FIELD_SIZE-1){
                 newBallDirection = (ball.x === this.FIELD_SIZE-1)? 'W' : 'E' ;
@@ -358,6 +386,19 @@ Game.prototype.changeProvinceOwner = function(x, y, newOwner){
     this.provinceOwners[x][y] = newOwner;
 };
 
+Game.prototype.checkIfSomebodyWon = function(){
+    if(this.player1BaseHealth === 0 || this.player2BaseHealth === 0){
+        if(this.player1BaseHealth === 0 && this.player2BaseHealth === 0){
+            this.draw = true;
+        } else if(this.player1BaseHealth === 0){
+            this.winner = 2;
+        } else if(this.player2BaseHealth === 0){
+            this.winner = 1;
+        }
+        this.endGame();
+    }
+};
+
 Game.prototype.setArrow = function(player, x, y, dir){
     if((player == 1 || player == 2)
         &&(dir == 'N' && y<this.FIELD_SIZE-1 || dir == 'S' && y>0 || dir == 'E' && x<this.FIELD_SIZE-1 || dir == 'W' && x>0)
@@ -369,6 +410,19 @@ Game.prototype.setArrow = function(player, x, y, dir){
         }
 
     return false;
+};
+
+Game.prototype.changeArrowDirectionNextTurn = function(x, y, direction){
+    this.arrowChangesNextTurnQueue.push({x:x, y:y, direction:direction});
+};
+
+Game.prototype.applyArrowChangesFromQueue = function(){
+    for(var i=0; i<this.arrowChangesNextTurnQueue.length; i++){
+        var arrowChange = this.arrowChangesNextTurnQueue[i];
+        this.changeArrowDirection(arrowChange.x, arrowChange.y, arrowChange.direction);
+    }
+
+    this.arrowChangesNextTurnQueue = [];
 };
 
 Game.prototype.endGame = function(){

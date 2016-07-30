@@ -45,7 +45,7 @@ io.on('connection', function(socket){
     if(socket.playerNum === 1 || socket.playerNum === 2){
         if(gameStarted === false){
             playersNum--;
-            if(socket.playerNum === 1){
+            if(socket.playerNum === 1 && typeof players2Socket !== 'undefined'){
                 players2Socket.playerNum = 1;
                 players1Socket = players2Socket;
             }
@@ -62,10 +62,14 @@ io.on('connection', function(socket){
     }
   });
 
-    socket.on('arrow', function(x, y, direction){
+    socket.on('arrow', function(x, y, direction, timeInfo){
         console.log('arrow ' + socket.playerNum + ' ' + x + ' ' + y + ' ' + direction + ' at ' + game.getGameTime());
+        timeInfo.server = game.getGameTime();
+        if(Math.floor(timeInfo.sender) > Math.floor(timeInfo.server)){
+            console.log("client is ahead");
+        }
         if (game.setArrow(socket.playerNum, x, y, direction)) {
-            io.emit('arrow', x, y, direction);
+            io.emit('arrow', x, y, direction, timeInfo);
         } else {
             console.log("FAIL");
         }
