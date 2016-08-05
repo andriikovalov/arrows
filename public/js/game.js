@@ -400,12 +400,20 @@ Game.prototype.checkIfSomebodyWon = function(){
 };
 
 Game.prototype.setArrow = function(player, x, y, dir){
+    if(this.isSetArrowPossible(player, x, y, dir)){
+            this.changeArrowDirection(x, y, dir);
+            return true;
+        }
+
+    return false;
+};
+
+Game.prototype.isSetArrowPossible = function(player, x, y, dir){
     if((player == 1 || player == 2)
         &&(dir == 'N' && y<this.FIELD_SIZE-1 || dir == 'S' && y>0 || dir == 'E' && x<this.FIELD_SIZE-1 || dir == 'W' && x>0)
         &&(typeof this.arrows[x] !== 'undefined') && (typeof this.arrows[x][y] !== 'undefined')
         &&(this.arrows[x][y].owner == player)
         &&(this.arrows[x][y].direction != dir)){
-            this.changeArrowDirection(x, y, dir);
             return true;
         }
 
