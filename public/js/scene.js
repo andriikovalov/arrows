@@ -18,7 +18,8 @@ var Scene = function(game) {
     this.loadTextures();
     
     this.createFlagsAndArrows(game);
-    this.createProvinces();
+    this.createProvinces(game);
+    this.createBalls(game);
 
     this.addListenersToGame(game);
     
@@ -44,6 +45,8 @@ var Scene = function(game) {
     this.stage.addChild(player2BaseStrengthText);
     
     this.playerBaseStrengthTexts = [null, player1BaseStrengthText, player2BaseStrengthText];
+    
+    this.LAST_STEP_TIME = game.LAST_STEP_TIME;
 };
 
 Scene.prototype.stop = function(){
@@ -286,7 +289,7 @@ Scene.notifyArrowChanged = function(){
 };
 
 
-Scene.prototype.createProvinces = function(){
+Scene.prototype.createProvinces = function(game){
     this.provinces = [];
     for(var i = 0; i < this.arrowCoordinates.length-1; i++){
         this.provinces[i] = [];
@@ -300,7 +303,16 @@ Scene.prototype.createProvinces = function(){
             this.provinces[i][j].position.y = this.arrowCoordinates[i][j].y;
 
             this.stage.addChild(this.provinces[i][j]);
+            
+            this.changeProvinceOwner(i, j, game.provinceOwners[i][j]);
         }
+    }
+};
+
+Scene.prototype.createBalls = function(game){
+    for(var i = 0; i < game.balls.length; i++){
+        var ball = game.balls[i];
+        this.createBall(ball);
     }
 };
 

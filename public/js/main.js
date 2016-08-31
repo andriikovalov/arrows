@@ -25,7 +25,14 @@ $( document ).ready(function() {
         setStatus('Waiting for a second player to join');
     });
     socket.on('start', function(playerNumber){
-        setStatus('Start!');
+        var playerColor;
+        if(playerNumber === 1){
+            playerColor = 'red';
+        } else {
+            playerColor = 'blue';
+        }
+        
+        setStatus('Start! Your color is ' + playerColor);
         currentPlayer = playerNumber;
         game.start();
     });
@@ -33,6 +40,12 @@ $( document ).ready(function() {
         setStatus('The other player left the game');
         game.stop();
         scene.stop();
+    });
+    socket.on('startObserver', function(gameData, gameSnapshotTime){
+        setStatus('Observing someone else\'s game');
+        
+        console.log(gameSnapshotTime);
+        console.log(gameData);
     });
 
     socket.on('arrow', function(x, y, direction, timeInfo){
@@ -48,9 +61,7 @@ $( document ).ready(function() {
         if(Math.floor(timeInfo.receiver) < Math.floor(timeInfo.server)){
             console.log("schedule change");
             game.changeArrowDirectionNextTurn(x, y, direction);
-        }
-
-        if (game.arrows[x][y].direction !== direction) {
+        } else if (game.arrows[x][y].direction !== direction) {
             game.changeArrowDirection(x, y, direction);
         }
     });

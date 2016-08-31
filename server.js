@@ -37,6 +37,9 @@ io.on('connection', function(socket){
       gameStarted = true;
       game.start();
       console.log('Game Start!');
+  } else {
+      console.log('Observer joined');
+      socket.emit('startObserver', game, game.getGameTime());
   }
 
   socket.on('disconnect', function(){
