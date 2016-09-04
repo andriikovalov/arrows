@@ -26,7 +26,6 @@ io.on('connection', function(socket){
     playersNum++;
     socket.playerNum = 1;
     players1Socket = socket;
-
     socket.emit('waiting');
   } else if(playersNum === 1) {
       playersNum++;
@@ -39,7 +38,13 @@ io.on('connection', function(socket){
       console.log('Game Start!');
   } else {
       console.log('Observer joined');
+      
+      //temporarily remove property with self reference to send game object
+      //TODO find better solution
+      var gameIntervalHandle = game.intervalHandle;
+      delete game.intervalHandle;
       socket.emit('startObserver', game, game.getGameTime());
+      game.intervalHandle = gameIntervalHandle;
   }
 
   socket.on('disconnect', function(){
