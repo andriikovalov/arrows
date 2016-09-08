@@ -38,13 +38,8 @@ io.on('connection', function(socket){
       console.log('Game Start!');
   } else {
       console.log('Observer joined');
-      
-      //temporarily remove property with self reference to send game object
-      //TODO find better solution
-      var gameIntervalHandle = game.intervalHandle;
-      delete game.intervalHandle;
-      socket.emit('startObserver', game, game.getGameTime());
-      game.intervalHandle = gameIntervalHandle;
+
+      socket.emit('startObserver', game.getTransferObject());
   }
 
   socket.on('disconnect', function(){

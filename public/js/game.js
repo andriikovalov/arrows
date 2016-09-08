@@ -442,6 +442,36 @@ Game.prototype.endGame = function(){
     }
 };
 
+Game.prototype.getTransferObject = function(){
+    var transferGame = {
+        arrows: this.arrows,
+        balls: this.balls,
+        provinceOwners: this.provinceOwners,
+        player1BaseHealth: this.player1BaseHealth,
+        player2BaseHealth: this.player2BaseHealth,
+        time: this.getGameTime()
+    };
+    
+    return transferGame;
+};
+
+Game.prototype.loadTransferObjectAndStart = function(data){
+    this.arrows = data.arrows;
+    this.balls = data.balls;
+    this.provinceOwners = data.provinceOwners;
+    this.player1BaseHealth = data.player1BaseHealth;
+    this.player2BaseHealth = data.player2BaseHealth;
+    this.currentStep = Math.floor(data.time);
+    var elapsedStepPortion = data.time - this.currentStep;
+    var timeUntilNextStep = (1 - elapsedStepPortion) * this.STEP_DURATION;
+    this.LAST_STEP = Date.now() - (elapsedStepPortion * this.STEP_DURATION);
+    var self = this;
+    setTimeout(function(){
+        self.start();
+        self.step();
+    }, timeUntilNextStep);
+};
+
 Game.prototype.logField = function(){
     var field = [];
     for(var i = 0; i < this.FIELD_SIZE; i++){
@@ -467,7 +497,6 @@ Game.prototype.logField = function(){
         console.log(field[i].join(""));
     }
 };
-
 
 if(typeof exports !== 'undefined'){
     exports.Game = Game;

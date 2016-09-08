@@ -4,7 +4,7 @@ $( document ).ready(function() {
 
     var scene = new Scene(game);
     scene.animate();
-
+    
     var socket = io();
 
     var unsafeTimeToUseclientPrediction = 0.8;
@@ -41,11 +41,10 @@ $( document ).ready(function() {
         game.stop();
         scene.stop();
     });
-    socket.on('startObserver', function(gameData, gameSnapshotTime){
+    socket.on('startObserver', function(gameData){
         setStatus('Observing someone else\'s game');
-        
-        console.log(gameSnapshotTime);
-        console.log(gameData);
+        game.loadTransferObjectAndStart(gameData);
+        scene.initFromGame(game);
     });
 
     socket.on('arrow', function(x, y, direction, timeInfo){

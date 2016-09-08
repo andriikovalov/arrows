@@ -4,7 +4,10 @@ var Scene = function(game) {
     this.FIELD_MARGIN_X = 50;
     this.FIELD_MARGIN_Y = 10;
     this.STEP_DURATION = game.STEP_DURATION;
-    
+    this.gameStopped = false;
+    this.balls = [];
+    this.loadTextures();
+
     this.calculateArrowCoordinates(game.FIELD_SIZE);
 
     this.renderer = PIXI.autoDetectRenderer(this.SCENE_SIZE_X, this.SCENE_SIZE_Y, {backgroundColor : 0xffffff});
@@ -14,39 +17,22 @@ var Scene = function(game) {
     this.stage = new PIXI.Container();
 
     this.drawGrid(game.FIELD_SIZE);
-
-    this.loadTextures();
-    
     this.createFlagsAndArrows(game);
-    this.createProvinces(game);
-    this.createBalls(game);
+    this.createProvinces();
+    this.createBaseStrengthTexts(game.player1BaseHealth);
 
     this.addListenersToGame(game);
-    
-    this.balls = [];
-    
-    this.gameStopped = false;
-    
-    var baseStrengthTextOffset = 30;
-    
-    var player1BaseStrengthText = new PIXI.Text(game.player1BaseHealth);
-    player1BaseStrengthText = new PIXI.Text(game.player1BaseHealth);
-    player1BaseStrengthText.position.x = this.FIELD_MARGIN_X - baseStrengthTextOffset;
-    player1BaseStrengthText.position.y = this.SCENE_SIZE_Y/2;
-    player1BaseStrengthText.anchor.x = 0.5;
-    player1BaseStrengthText.anchor.y = 0.5;
-    this.stage.addChild(player1BaseStrengthText);
 
-    var player2BaseStrengthText = new PIXI.Text(game.player2BaseHealth);
-    player2BaseStrengthText.position.x = this.SCENE_SIZE_X - this.FIELD_MARGIN_X + baseStrengthTextOffset;
-    player2BaseStrengthText.position.y = this.SCENE_SIZE_Y/2;
-    player2BaseStrengthText.anchor.x = 0.5;
-    player2BaseStrengthText.anchor.y = 0.5;
-    this.stage.addChild(player2BaseStrengthText);
-    
-    this.playerBaseStrengthTexts = [null, player1BaseStrengthText, player2BaseStrengthText];
-    
+    this.initFromGame(game);
+};
+
+Scene.prototype.initFromGame = function(game){
     this.LAST_STEP_TIME = game.LAST_STEP_TIME;
+    this.initFlagsAndArrows(game);
+    this.initProvinces(game);
+    this.setBaseStrength(1, game.player1BaseHealth);
+    this.setBaseStrength(2, game.player2BaseHealth);
+    this.createBalls(game);
 };
 
 Scene.prototype.stop = function(){
@@ -140,29 +126,21 @@ Scene.prototype.loadTextures = function(){
 };
 
 Scene.prototype.createFlagsAndArrows = function(game){
+    var fieldSize = game.FIELD_SIZE;
     this.flags = [];
     this.arrows = [];
-    for(var i = 0; i < game.FIELD_SIZE; i++){
+    for(var i = 0; i < fieldSize; i++){
         this.flags[i] = [];
         this.arrows[i] = [];
-        for(var j = 0; j < game.FIELD_SIZE; j++){
+        for(var j = 0; j < fieldSize; j++){
             this.createArrowAt(i, j, game);
-            this.createFlagAt(i, j, game);
+            this.createFlagAt(i, j);
         }
     }
 };
 
-Scene.prototype.createFlagAt = function(x, y, game){
-    var texture;
-    if(game.arrows[x][y].owner == 1){
-        texture = this.textures.p1_flag;
-    } else if(game.arrows[x][y].owner == 2){
-        texture = this.textures.p2_flag;
-    } else {
-        texture = this.textures.none_flag;
-    }
-
-    var flag = new PIXI.Sprite(texture);
+Scene.prototype.createFlagAt = function(x, y){
+    var flag = new PIXI.Sprite(this.textures.none_flag);
 
     flag.anchor.x = 0.5;
     flag.anchor.y = 0.5;
@@ -175,20 +153,7 @@ Scene.prototype.createFlagAt = function(x, y, game){
 };
 
 Scene.prototype.createArrowAt = function(x, y, game){
-    var texture;
-    if(game.arrows[x][y].direction == 'N'){
-        texture = this.textures.arrow_n;
-    } else if(game.arrows[x][y].direction == 'S'){
-        texture = this.textures.arrow_s;
-    } else if(game.arrows[x][y].direction == 'E'){
-        texture = this.textures.arrow_e;
-    } else if(game.arrows[x][y].direction == 'W'){
-        texture = this.textures.arrow_w;
-    } else {
-        texture = PIXI.Texture.EMPTY;
-    }
-
-    var arrow = new PIXI.Sprite(texture);
+    var arrow = new PIXI.Sprite(PIXI.Texture.EMPTY);
 
     arrow.anchor.x = 0.5;
     arrow.anchor.y = 0.5;
@@ -199,8 +164,8 @@ Scene.prototype.createArrowAt = function(x, y, game){
     arrow.gamePosition = {};
     arrow.gamePosition.x = x;
     arrow.gamePosition.y = y;
-    arrow.gameOwner = game.arrows[x][y].owner;
-    arrow.gameDirection = game.arrows[x][y].direction;
+    arrow.gameOwner = "OwnerWillBeDefinedLater";
+    arrow.gameDirection = "DirectionWillBeDefinedLater";
 
     this.arrows[x][y] = arrow;
     this.stage.addChild(arrow);
@@ -288,8 +253,24 @@ Scene.notifyArrowChanged = function(){
     console.warn('Scene.notifyArrowChanged function is supposed to be redefined');
 };
 
+Scene.prototype.initFlagsAndArrows = function(game){
+    for(var i = 0; i < game.FIELD_SIZE; i++){
+        for(var j = 0; j < game.FIELD_SIZE; j++){
+            this.updateArrow(i, j, game.arrows[i][j].direction);
+            this.updateFlag(i, j, game.arrows[i][j].owner);
+        }
+    }
+};
 
-Scene.prototype.createProvinces = function(game){
+Scene.prototype.initProvinces = function(game){
+    for(var i = 0; i < this.arrowCoordinates.length-1; i++){
+        for(var j = 0; j < this.arrowCoordinates.length-1; j++){
+            this.changeProvinceOwner(i, j, game.provinceOwners[i][j]);
+        }
+    }
+};
+
+Scene.prototype.createProvinces = function(){
     this.provinces = [];
     for(var i = 0; i < this.arrowCoordinates.length-1; i++){
         this.provinces[i] = [];
@@ -303,17 +284,38 @@ Scene.prototype.createProvinces = function(game){
             this.provinces[i][j].position.y = this.arrowCoordinates[i][j].y;
 
             this.stage.addChild(this.provinces[i][j]);
-            
-            this.changeProvinceOwner(i, j, game.provinceOwners[i][j]);
         }
     }
 };
 
 Scene.prototype.createBalls = function(game){
+    while(this.balls.length > 0){
+        this.removeBallAtIndex(0);
+    }
     for(var i = 0; i < game.balls.length; i++){
         var ball = game.balls[i];
         this.createBall(ball);
     }
+};
+
+Scene.prototype.createBaseStrengthTexts = function(initialText){
+    var baseStrengthTextOffset = 30;
+    
+    var player1BaseStrengthText = new PIXI.Text(initialText);
+    player1BaseStrengthText.position.x = this.FIELD_MARGIN_X - baseStrengthTextOffset;
+    player1BaseStrengthText.position.y = this.SCENE_SIZE_Y/2;
+    player1BaseStrengthText.anchor.x = 0.5;
+    player1BaseStrengthText.anchor.y = 0.5;
+    this.stage.addChild(player1BaseStrengthText);
+
+    var player2BaseStrengthText = new PIXI.Text(initialText);
+    player2BaseStrengthText.position.x = this.SCENE_SIZE_X - this.FIELD_MARGIN_X + baseStrengthTextOffset;
+    player2BaseStrengthText.position.y = this.SCENE_SIZE_Y/2;
+    player2BaseStrengthText.anchor.x = 0.5;
+    player2BaseStrengthText.anchor.y = 0.5;
+    this.stage.addChild(player2BaseStrengthText);
+    
+    this.playerBaseStrengthTexts = [null, player1BaseStrengthText, player2BaseStrengthText];
 };
 
 Scene.prototype.updateFlag = function(x, y, newOwner){
