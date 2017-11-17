@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var port = 8080;
 
 var gameModule = require('./public/js/game.js');
 var game = new gameModule.Game();
@@ -11,8 +12,8 @@ app.get('/', function(req, res){
 });
 app.use(express.static(__dirname + '/public'));
 
-http.listen(3000, function(){
-  console.log('listening on *:3000');
+http.listen(port, function(){
+  console.log('listening on *:'+port);
 });
 
 var playersNum = 0;
